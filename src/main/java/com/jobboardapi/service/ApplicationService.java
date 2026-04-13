@@ -5,6 +5,8 @@ import com.jobboardapi.dto.ApplicationResponse;
 import com.jobboardapi.entity.Application;
 import com.jobboardapi.entity.Job;
 import com.jobboardapi.entity.User;
+import com.jobboardapi.exception.AlreadyExistsException;
+import com.jobboardapi.exception.ResourceNotFoundException;
 import com.jobboardapi.repository.ApplicationRepository;
 import com.jobboardapi.repository.JobRepository;
 import com.jobboardapi.repository.UserRepository;
@@ -27,17 +29,15 @@ public class ApplicationService {
     public ApplicationResponse applyForJob(ApplicationRequest request) {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
-
         User applicant = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
         Job job = jobRepository.findById(request.getJobId())
-                .orElseThrow(() -> new RuntimeException("Job not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found!"));
 
-        // Check if already applied
         if (applicationRepository.existsByJob_IdAndApplicant_Email(
                 request.getJobId(), email)) {
-            throw new RuntimeException("You already applied for this job!");
+            throw new AlreadyExistsException("You already applied for this job!");
         }
 
         Application application = Application.builder()
@@ -71,8 +71,7 @@ public class ApplicationService {
     // Update application status (COMPANY)
     public ApplicationResponse updateStatus(Long applicationId, String status) {
         Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new RuntimeException("Application not found!"));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found!"));
         application.setStatus(
                 com.jobboardapi.entity.ApplicationStatus.valueOf(status.toUpperCase())
         );

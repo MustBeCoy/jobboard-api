@@ -100,6 +100,7 @@ import com.jobboardapi.dto.PageResponse;
 import com.jobboardapi.entity.Job;
 import com.jobboardapi.entity.JobType;
 import com.jobboardapi.entity.User;
+import com.jobboardapi.exception.ResourceNotFoundException;
 import com.jobboardapi.repository.JobRepository;
 import com.jobboardapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -126,7 +127,7 @@ public class JobService {
                 .getAuthentication().getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
         Job job = Job.builder()
                 .title(request.getTitle())
@@ -181,7 +182,8 @@ public class JobService {
     // Get job by ID
     public JobResponse getJobById(Long id) {
         Job job = jobRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job with id " + id + " not found!"));
+
         return mapToResponse(job);
     }
 
@@ -199,8 +201,8 @@ public class JobService {
     // Delete job
     public String deleteJob(Long id) {
         jobRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found!"));
-        jobRepository.deleteById(id);
+                .orElseThrow(() -> new ResourceNotFoundException("Job with id " + id + " not found!"));
+
         return "Job deleted successfully!";
     }
 

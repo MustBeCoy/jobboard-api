@@ -5,6 +5,8 @@ import com.jobboardapi.dto.LoginRequest;
 import com.jobboardapi.dto.RegisterRequest;
 import com.jobboardapi.entity.Role;
 import com.jobboardapi.entity.User;
+import com.jobboardapi.exception.AlreadyExistsException;
+import com.jobboardapi.exception.ResourceNotFoundException;
 import com.jobboardapi.repository.UserRepository;
 import com.jobboardapi.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered!");
+            throw new AlreadyExistsException("Email already registered!");
         }
 
         User user = User.builder()
@@ -49,7 +51,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
         String token = jwtService.generateToken(user);
         return new AuthResponse(token, user.getRole().name(), "Login successful!");

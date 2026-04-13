@@ -53,6 +53,7 @@ import com.jobboardapi.dto.JobRequest;
 import com.jobboardapi.dto.JobResponse;
 import com.jobboardapi.dto.PageResponse;
 import com.jobboardapi.service.JobService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +69,7 @@ public class JobController {
 
     // POST /api/jobs
     @PostMapping
-    public ResponseEntity<JobResponse> postJob(@RequestBody JobRequest request) {
+    public ResponseEntity<JobResponse> postJob(@Valid @RequestBody JobRequest request) {
         return ResponseEntity.ok(jobService.postJob(request));
     }
 
