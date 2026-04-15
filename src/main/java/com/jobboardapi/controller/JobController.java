@@ -1,52 +1,3 @@
-//package com.jobboardapi.controller;
-//
-//import com.jobboardapi.dto.JobRequest;
-//import com.jobboardapi.dto.JobResponse;
-//import com.jobboardapi.service.JobService;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//
-//import java.util.List;
-//
-//@RestController
-//@RequestMapping("/api/jobs")
-//@RequiredArgsConstructor
-//public class JobController {
-//
-//    private final JobService jobService;
-//
-//    // POST /api/jobs — post a job (COMPANY only)
-//    @PostMapping
-//    public ResponseEntity<JobResponse> postJob(@RequestBody JobRequest request) {
-//        return ResponseEntity.ok(jobService.postJob(request));
-//    }
-//
-//    // GET /api/jobs — get all jobs (anyone logged in)
-//    @GetMapping
-//    public ResponseEntity<List<JobResponse>> getAllJobs() {
-//        return ResponseEntity.ok(jobService.getAllJobs());
-//    }
-//
-//    // GET /api/jobs/1 — get single job by ID
-//    @GetMapping("/{id}")
-//    public ResponseEntity<JobResponse> getJobById(@PathVariable Long id) {
-//        return ResponseEntity.ok(jobService.getJobById(id));
-//    }
-//
-//    // GET /api/jobs/my — get jobs posted by logged in company
-//    @GetMapping("/my")
-//    public ResponseEntity<List<JobResponse>> getMyJobs() {
-//        return ResponseEntity.ok(jobService.getMyJobs());
-//    }
-//
-//    // DELETE /api/jobs/1 — delete a job
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<String> deleteJob(@PathVariable Long id) {
-//        return ResponseEntity.ok(jobService.deleteJob(id));
-//    }
-//}
-
 package com.jobboardapi.controller;
 
 import com.jobboardapi.dto.JobRequest;
@@ -56,6 +7,7 @@ import com.jobboardapi.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,13 +19,14 @@ public class JobController {
 
     private final JobService jobService;
 
-    // POST /api/jobs
+    // Only COMPANY can post jobs
     @PostMapping
+    @PreAuthorize("hasRole('COMPANY')")
     public ResponseEntity<JobResponse> postJob(@Valid @RequestBody JobRequest request) {
         return ResponseEntity.ok(jobService.postJob(request));
     }
 
-    // GET /api/jobs?page=0&size=10&sortBy=postedAt
+    // Anyone logged in can see jobs
     @GetMapping
     public ResponseEntity<PageResponse<JobResponse>> getAllJobs(
             @RequestParam(defaultValue = "0") int page,
@@ -82,7 +35,7 @@ public class JobController {
         return ResponseEntity.ok(jobService.getAllJobs(page, size, sortBy));
     }
 
-    // GET /api/jobs/search?keyword=java&page=0&size=10
+    // Anyone logged in can search
     @GetMapping("/search")
     public ResponseEntity<PageResponse<JobResponse>> searchJobs(
             @RequestParam String keyword,
@@ -91,7 +44,7 @@ public class JobController {
         return ResponseEntity.ok(jobService.searchJobs(keyword, page, size));
     }
 
-    // GET /api/jobs/filter?location=Bangalore&jobType=FULL_TIME&page=0&size=10
+    // Anyone logged in can filter
     @GetMapping("/filter")
     public ResponseEntity<PageResponse<JobResponse>> filterJobs(
             @RequestParam(required = false) String location,
@@ -101,20 +54,22 @@ public class JobController {
         return ResponseEntity.ok(jobService.filterJobs(location, jobType, page, size));
     }
 
-    // GET /api/jobs/1
+    // Anyone logged in can see job by ID
     @GetMapping("/{id}")
     public ResponseEntity<JobResponse> getJobById(@PathVariable Long id) {
         return ResponseEntity.ok(jobService.getJobById(id));
     }
 
-    // GET /api/jobs/my
+    // Only COMPANY can see their own jobs
     @GetMapping("/my")
+    @PreAuthorize("hasRole('COMPANY')")
     public ResponseEntity<List<JobResponse>> getMyJobs() {
         return ResponseEntity.ok(jobService.getMyJobs());
     }
 
-    // DELETE /api/jobs/1
+    // COMPANY or ADMIN can delete
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('COMPANY', 'ADMIN')")
     public ResponseEntity<String> deleteJob(@PathVariable Long id) {
         return ResponseEntity.ok(jobService.deleteJob(id));
     }

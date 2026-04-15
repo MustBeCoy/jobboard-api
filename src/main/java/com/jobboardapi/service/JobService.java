@@ -101,6 +101,7 @@ import com.jobboardapi.entity.Job;
 import com.jobboardapi.entity.JobType;
 import com.jobboardapi.entity.User;
 import com.jobboardapi.exception.ResourceNotFoundException;
+import com.jobboardapi.exception.UnauthorizedException;
 import com.jobboardapi.repository.JobRepository;
 import com.jobboardapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -200,9 +201,24 @@ public class JobService {
 
     // Delete job
     public String deleteJob(Long id) {
-        jobRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Job with id " + id + " not found!"));
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
 
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found!"));
+
+        // Check if logged in user is the owner or admin
+        boolean isOwner = job.getPostedBy().getEmail().equals(email);
+        boolean isAdmin = SecurityContextHolder.getContext()
+                .getAuthentication().getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isAdmin) {
+            throw new UnauthorizedException("You are not allowed to delete this job!");
+        }
+
+        jobRepository.deleteById(id);
         return "Job deleted successfully!";
     }
 

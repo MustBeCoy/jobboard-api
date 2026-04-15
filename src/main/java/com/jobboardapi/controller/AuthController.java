@@ -1,4 +1,4 @@
-package com.jobboard_api.controller;
+package com.jobboardapi.controller;
 
 import com.jobboardapi.dto.AuthResponse;
 import com.jobboardapi.dto.LoginRequest;
